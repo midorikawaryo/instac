@@ -1,8 +1,6 @@
 class PicturesController < ApplicationController
-  before_action :set_picture, only: [:show, :edit, :update, :destroy,]
-  before_action :login_user, only: [:index,:show, :new ,:edit, :update, :destroy,]
+  before_action :set_picture, only: [:show, :edit, :update, :destroy]
   before_action :ensure_correct_user, only: [:edit, :update, :destroy]
-
 
   def index
     @pictures = Picture.all
@@ -43,7 +41,7 @@ class PicturesController < ApplicationController
 
   def destroy
     @picture.destroy
-    redirect_to pictures_path, notice:"削除しました！"
+    redirect_to pictures_path, notice: "削除しました！"
   end
 
   def confirm
@@ -55,25 +53,16 @@ class PicturesController < ApplicationController
   private
 
   def picture_params
-    params.require(:picture).permit(:content,:image,:image_cache)
+    params.require(:picture).permit(:content, :image, :image_cache)
   end
 
   def set_picture
     @picture = Picture.find(params[:id])
   end
 
-  def login_user
-    if current_user.nil?
-      redirect_to new_session_path, notice: "ログインしてください!"
-    end
-  end
-
   def ensure_correct_user
-    @picture = Picture.find_by(id:params[:id])
-    if @picture.user_id != @current_user.id
-      flash[:notice] = "権限がありません！"
-      redirect_to pictures_path
-    end
+    return if @picture.user_id == current_user.id
+    flash[:notice] = "権限がありません！"
+    redirect_to pictures_path
   end
-
 end

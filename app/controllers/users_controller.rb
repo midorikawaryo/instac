@@ -1,6 +1,7 @@
 class UsersController < ApplicationController
-  before_action :login_user, only: [ :show, :update, :destroy, :edit]
-  before_action :ensure_correct_user, only: [ :show, :update, :destroy, :edit]
+  skip_before_action :require_login, only: [:new, :create]
+  before_action :set_user, only: [:show, :edit, :update, :destroy, :favorite_index]
+  before_action :ensure_correct_user, only: [:show, :edit, :update, :destroy, :favorite_index]
 
   def new
     @user = User.new
@@ -16,50 +17,42 @@ class UsersController < ApplicationController
   end
 
   def show
-    @user = User.find(params[:id])
     @favorites_pictures = @user.favorite_pictures
   end
 
   def favorite_index
-    @user = User.find(params[:id])
     @favorites_pictures = @user.favorite_pictures
   end
 
   def edit
-    @user = User.find(params[:id])
   end
 
   def update
-    @user = User.find(params[:id])
     if @user.update(user_params)
-      redirect_to user_path ,notice: "プロフィールを編集しました！"
+      redirect_to user_path(@user), notice: "プロフィールを編集しました！"
     else
       render 'edit'
     end
   end
 
   def destroy
+    # TODO: ユーザー削除機能を実装する場合は @user.destroy とルート追加
   end
 
   private
 
   def user_params
     params.require(:user).permit(:name, :email, :password,
-                                 :password_confirmation,:image,:image_cache)
+                                 :password_confirmation, :image, :image_cache)
   end
 
-  def login_user
-    if current_user.nil?
-      redirect_to new_session_path, notice: "ログインしてください"
-    end
+  def set_user
+    @user = User.find(params[:id])
   end
 
   def ensure_correct_user
-    @user = User.find_by(id:params[:id])
-    if @user.id != @current_user.id
-      flash[:notice] = "権限がありません！"
-      redirect_to pictures_path
-    end
+    return if @user.id == current_user.id
+    flash[:notice] = "権限がありません！"
+    redirect_to pictures_path
   end
-
 end
