@@ -1,6 +1,7 @@
 class UsersController < ApplicationController
-  before_action :login_user, only: [ :show, :update, :destroy, :edit]
-  before_action :ensure_correct_user, only: [ :show, :update, :destroy, :edit]
+  before_action :login_user, only: [:show, :update, :destroy, :edit, :favorite_index]
+  before_action :set_user, only: [:show, :update, :destroy, :edit, :favorite_index]
+  before_action :authorize_current_user, only: [:show, :update, :destroy, :edit]
 
   def new
     @user = User.new
@@ -16,21 +17,17 @@ class UsersController < ApplicationController
   end
 
   def show
-    @user = User.find(params[:id])
     @favorites_pictures = @user.favorite_pictures
   end
 
   def favorite_index
-    @user = User.find(params[:id])
     @favorites_pictures = @user.favorite_pictures
   end
 
   def edit
-    @user = User.find(params[:id])
   end
 
   def update
-    @user = User.find(params[:id])
     if @user.update(user_params)
       redirect_to user_path ,notice: "プロフィールを編集しました！"
     else
@@ -48,18 +45,12 @@ class UsersController < ApplicationController
                                  :password_confirmation,:image,:image_cache)
   end
 
-  def login_user
-    if current_user.nil?
-      redirect_to new_session_path, notice: "ログインしてください"
-    end
+  def set_user
+    @user = User.find(params[:id])
   end
 
-  def ensure_correct_user
-    @user = User.find_by(id:params[:id])
-    if @user.id != @current_user.id
-      flash[:notice] = "権限がありません！"
-      redirect_to pictures_path
-    end
+  def authorize_current_user
+    authorize_user(@user)
   end
 
 end

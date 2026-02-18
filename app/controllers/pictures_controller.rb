@@ -1,7 +1,7 @@
 class PicturesController < ApplicationController
-  before_action :set_picture, only: [:show, :edit, :update, :destroy,]
-  before_action :login_user, only: [:index,:show, :new ,:edit, :update, :destroy,]
-  before_action :ensure_correct_user, only: [:edit, :update, :destroy]
+  before_action :set_picture, only: [:show, :edit, :update, :destroy]
+  before_action :login_user, only: [:index, :show, :new, :edit, :update, :destroy]
+  before_action :authorize_picture_user, only: [:edit, :update, :destroy]
 
 
   def index
@@ -62,18 +62,8 @@ class PicturesController < ApplicationController
     @picture = Picture.find(params[:id])
   end
 
-  def login_user
-    if current_user.nil?
-      redirect_to new_session_path, notice: "ログインしてください!"
-    end
-  end
-
-  def ensure_correct_user
-    @picture = Picture.find_by(id:params[:id])
-    if @picture.user_id != @current_user.id
-      flash[:notice] = "権限がありません！"
-      redirect_to pictures_path
-    end
+  def authorize_picture_user
+    authorize_user(@picture.user)
   end
 
 end
